@@ -1,0 +1,61 @@
+#mobile-controls {
+    display: none;
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    height: 140px;
+    pointer-events: none;
+    z-index: 10;
+}
+
+@media (pointer: coarse) {
+    #mobile-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+}
+
+#joystick-base {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    pointer-events: auto;
+}
+
+#joystick-stick {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.mobile-buttons-right {
+    display: flex;
+    gap: 12px;
+    pointer-events: auto;
+    align-items: flex-end;
+}
+
+.m-ctrl-btn {
+    width: 55px;
+    height: 55px;
+    background: rgba(50, 50, 50, 0.7);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}

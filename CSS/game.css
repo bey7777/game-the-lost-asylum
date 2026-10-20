@@ -1,0 +1,149 @@
+#game-screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+}
+
+#game-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+#hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* Posisi Bar Nyawa (Atas Kiri No. 1) */
+#hud .hud-bar:nth-of-type(1) {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+}
+
+/* Posisi Bar Stamina (Atas Kiri No. 2) */
+#hud .hud-bar:nth-of-type(2) {
+    position: absolute;
+    top: 52px;
+    left: 15px;
+}
+
+/* Posisi Bar Baterai (Atas Kiri No. 3) */
+#hud .hud-bar:nth-of-type(3) {
+    position: absolute;
+    top: 89px;
+    left: 15px;
+}
+
+.hud-bar {
+    background: rgba(15, 15, 15, 0.85);
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid #444;
+    font-size: 11px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 190px;
+    justify-content: space-between;
+}
+
+.bar-container {
+    width: 95px;
+    height: 7px;
+    background: #222;
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid #333;
+}
+
+.fill {
+    height: 100%;
+    width: 100%;
+    transition: width 0.1s linear;
+}
+
+#health-fill { background-color: #cc0000; }
+#stamina-fill { background-color: #cca300; }
+#battery-fill { background-color: #00cccc; }
+
+/* Posisi Kotak Misi di Kanan Atas */
+.hud-info {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(15, 15, 15, 0.85);
+    padding: 10px 15px;
+    border-radius: 4px;
+    border: 1px solid #444;
+    font-size: 12px;
+    color: #ffcc00;
+    pointer-events: none;
+}
+
+/* Tombol Mobile / HUD di Kanan Bawah */
+.mobile-hud-btn {
+    pointer-events: auto;
+    background: rgba(30, 30, 30, 0.85);
+    color: #fff;
+    border: 1px solid #555;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+    position: absolute;
+    bottom: 20px;
+}
+
+#btn-pause-mobile { right: 75px; }
+#btn-inv-mobile { right: 20px; }
+
+/* Modal Inventori & Puzzle */
+#inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin: 15px 0;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.inventory-slot {
+    width: 50px;
+    height: 50px;
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    position: relative;
+    font-size: 20px;
+}
+
+.inventory-slot.selected {
+    border-color: #cc0000;
+}
+
+#item-description {
+    font-size: 12px;
+    color: #aaa;
+    min-height: 40px;
+    margin-bottom: 15px;
+}

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>THE LOST ASYLUM - Horror Survival</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/menu.css">
+    <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="css/mobile.css">
+</head>
+<body>
+    <!-- Main Menu Screen -->
+    <div id="main-menu" class="screen active">
+        <div class="menu-container">
+            <h1 class="game-title">THE LOST ASYLUM</h1>
+            <p class="game-subtitle">Rumah Sakit Jiwa Terbengkalai</p>
+            <div class="menu-buttons">
+                <button id="btn-new-game" class="btn-primary">Mulai Baru</button>
+                <button id="btn-continue" class="btn-secondary" disabled>Lanjutkan</button>
+                <button id="btn-settings" class="btn-secondary">Pengaturan</button>
+                <button id="btn-controls" class="btn-secondary">Kontrol</button>
+                <button id="btn-credits" class="btn-secondary">Kredit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h2>Pengaturan</h2>
+            <label>Volume Musik: <span id="val-music">50</span>%</label>
+            <input type="range" id="range-music" min="0" max="100" value="50">
+            <label>Volume SFX: <span id="val-sfx">70</span>%</label>
+            <input type="range" id="range-sfx" min="0" max="100" value="70">
+            <button id="btn-close-settings" class="btn-primary">Tutup</button>
+        </div>
+    </div>
+
+    <!-- Controls Modal -->
+    <div id="controls-modal" class="modal">
+        <div class="modal-content">
+            <h2>Panduan Kontrol</h2>
+            <p><strong>Desktop:</strong><br>WASD / Panah = Bergerak<br>Shift = Lari<br>E = Interaksi<br>F = Senter<br>I = Inventori<br>Esc = Jeda</p>
+            <p><strong>Mobile:</strong><br>Gunakan Virtual Joystick di kiri bawah.<br>Tombol interaksi, senter, sprint, dan inventori di sisi kanan.</p>
+            <button id="btn-close-controls" class="btn-primary">Tutup</button>
+        </div>
+    </div>
+
+    <!-- Credits Modal -->
+    <div id="credits-modal" class="modal">
+        <div class="modal-content">
+            <h2>Kredit</h2>
+            <p><strong>THE LOST ASYLUM</strong><br>Dibuat oleh Roux Beryl  XI RPL 2.<br>Teknologi: HTML5 Canvas, Vanilla JS, Web Audio API.</p>
+            <button id="btn-close-credits" class="btn-primary">Tutup</button>
+        </div>
+    </div>
+
+    <!-- Pause Menu -->
+    <div id="pause-menu" class="modal">
+        <div class="modal-content">
+            <h2>Permainan Dijeda</h2>
+            <button id="btn-resume" class="btn-primary">Lanjutkan</button>
+            <button id="btn-restart" class="btn-secondary">Mulai Ulang</button>
+            <button id="btn-quit" class="btn-secondary">Keluar ke Menu</button>
+        </div>
+    </div>
+
+    <!-- Game Screen / HUD -->
+    <div id="game-screen" class="screen">
+        <canvas id="game-canvas" tabindex="0"></canvas>
+        <div id="hud">
+            <div class="hud-bar">
+                <span>Nyawa:</span>
+                <div class="bar-container"><div id="health-fill" class="fill"></div></div>
+            </div>
+            <div class="hud-bar">
+                <span>Stamina:</span>
+                <div class="bar-container"><div id="stamina-fill" class="fill"></div></div>
+            </div>
+            <div class="hud-bar">
+                <span>Baterai Senter:</span>
+                <div class="bar-container"><div id="battery-fill" class="fill"></div></div>
+            </div>
+            <div class="hud-info">
+                <span id="quest-tracker">Misi: Temukan jalan keluar</span>
+            </div>
+            <button id="btn-pause-mobile" class="mobile-hud-btn">⏸</button>
+            <button id="btn-inv-mobile" class="mobile-hud-btn">🎒</button>
+        </div>
+
+        <!-- Mobile Controls Overlay -->
+        <div id="mobile-controls">
+            <div id="joystick-base"><div id="joystick-stick"></div></div>
+            <div class="mobile-buttons-right">
+                <button id="m-btn-interact" class="m-ctrl-btn">E</button>
+                <button id="m-btn-flash" class="m-ctrl-btn">🔦</button>
+                <button id="m-btn-sprint" class="m-ctrl-btn">RUN</button>
+            </div>
+        </div>
+
+        <!-- Inventory Modal -->
+        <div id="inventory-modal" class="modal">
+            <div class="modal-content">
+                <h2>Inventori</h2>
+                <div id="inventory-grid"></div>
+                <div id="item-description">Pilih item untuk melihat detail.</div>
+                <button id="btn-close-inventory" class="btn-primary">Tutup</button>
+            </div>
+        </div>
+
+        <!-- Puzzle / Document Modal -->
+        <div id="puzzle-modal" class="modal">
+            <div class="modal-content" id="puzzle-content-box">
+                <!-- Dinamis diisi oleh puzzles.js -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameover-screen" class="screen">
+        <div class="menu-container">
+            <h1 class="game-title" style="color: #ff3333;">ANDA TEWAS</h1>
+            <p id="gameover-reason">Makhluk itu berhasil menangkap Anda...</p>
+            <button id="btn-try-again" class="btn-primary">Coba Lagi</button>
+            <button id="btn-menu-from-over" class="btn-secondary">Menu Utama</button>
+        </div>
+    </div>
+
+    <!-- Ending Screen -->
+    <div id="ending-screen" class="screen">
+        <div class="menu-container">
+            <h1 id="ending-title" class="game-title">ENDING</h1>
+            <p id="ending-text">Cerita selesai...</p>
+            <button id="btn-menu-from-ending" class="btn-primary">Menu Utama</button>
+        </div>
+    </div>
+
+    <!-- Modul Utama JS -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
