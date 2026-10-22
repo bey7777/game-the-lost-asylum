@@ -3,24 +3,27 @@ import { CONFIG } from './config.js';
 export class MapSystem {
     constructor() {
         this.tileSize = CONFIG.TILE_SIZE;
-        // 0: Lantai, 1: Dinding, 2: Pintu Terkunci, 3: Jalan Keluar/Pintu Utama, 4: Kunci Berkarat, 5: P3K, 6: Catatan Kode 7492
+        // Legend:
+        // 0: Lantai, 1: Dinding, 2: Pintu 1 (Kunci Berkarat), 3: Pintu Utama (Exit/Code)
+        // 4: Kunci Berkarat, 5: P3K, 6: Catatan Kode 7492
+        // 7: Kunci Perak, 8: Pintu 2 (Kunci Perak)
         this.data = [
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-            [1,0,0,0,0,1,0,0,4,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,3,1],
+            [1,0,0,0,4,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,3,1], // 4 = Kunci Berkarat
             [1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1],
             [1,0,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,1,0,1],
             [1,0,1,0,1,1,1,1,1,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,0,1,0,1],
             [1,0,0,0,1,0,0,0,0,1,0,0,5,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1],
             [1,1,1,0,1,0,1,1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,0,1,1,1,1,1],
             [1,0,0,0,0,0,1,0,0,0,0,0,0,1,0,1,0,0,0,1,0,1,0,0,0,0,0,0,0,1],
-            [1,0,1,1,1,1,1,0,1,1,1,1,0,1,2,1,0,1,0,1,0,1,0,1,1,1,1,1,0,1],
-            [1,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,1],
-            [1,1,1,1,1,1,0,1,1,0,2,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1],
+            [1,0,1,1,1,1,1,0,1,1,1,1,0,1,2,1,0,1,0,1,0,1,0,1,1,1,1,1,0,1], // 2 = Pintu 1
+            [1,0,0,0,0,0,0,0,1,0,7,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,1], // 7 = Kunci Perak
+            [1,1,1,1,1,1,0,1,1,0,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1],
             [1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
             [1,0,1,1,0,1,0,1,0,1,1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1,0,1,0,1],
-            [1,0,1,0,0,0,0,1,0,1,0,0,0,0,6,0,0,1,0,0,0,1,0,0,0,1,0,1,0,1], // <-- Tile 6 (Catatan Kode) ditambahkan di sini!
+            [1,0,1,0,0,0,0,1,0,1,0,0,0,8,0,0,0,1,0,0,0,1,0,0,0,1,0,1,0,1], // 8 = Pintu 2
             [1,0,1,0,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,0,1,0,1],
-            [1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,1],
+            [1,0,0,0,1,0,0,0,0,0,0,1,0,6,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,1], // 6 = Catatan Kode Rahasia
             [1,1,1,0,1,0,1,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1,1,1,1,0,1],
             [1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
             [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
@@ -51,7 +54,13 @@ export class MapSystem {
                         ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
                         ctx.fillStyle = '#ffcc00';
                         ctx.font = '14px Courier New';
-                        ctx.fillText('🔒', screenX + 6, screenY + 22);
+                        ctx.fillText('🔒1', screenX + 4, screenY + 22);
+                    } else if (tile === 8) {
+                        ctx.fillStyle = '#1f3a60';
+                        ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
+                        ctx.fillStyle = '#00ffff';
+                        ctx.font = '14px Courier New';
+                        ctx.fillText('🔒2', screenX + 4, screenY + 22);
                     } else if (tile === 3) {
                         ctx.fillStyle = '#004a4a';
                         ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
@@ -59,21 +68,24 @@ export class MapSystem {
                         ctx.font = '10px Courier New';
                         ctx.fillText('EXIT', screenX + 3, screenY + 20);
                     } else if (tile === 4) {
-                        // Kunci Berkarat di lantai
                         ctx.fillStyle = '#0d0d0d';
                         ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
                         ctx.fillStyle = '#ffcc00';
                         ctx.font = '14px Courier New';
                         ctx.fillText('🗝️', screenX + 6, screenY + 22);
+                    } else if (tile === 7) {
+                        ctx.fillStyle = '#0d0d0d';
+                        ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = '14px Courier New';
+                        ctx.fillText('🔑', screenX + 6, screenY + 22);
                     } else if (tile === 5) {
-                        // P3K di lantai
                         ctx.fillStyle = '#0d0d0d';
                         ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
                         ctx.fillStyle = '#ff3333';
                         ctx.font = '14px Courier New';
                         ctx.fillText('💊', screenX + 6, screenY + 22);
                     } else if (tile === 6) {
-                        // Catatan Kode Rahasia (7492)
                         ctx.fillStyle = '#0d0d0d';
                         ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
                         ctx.fillStyle = '#f39c12';

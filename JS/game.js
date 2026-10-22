@@ -222,6 +222,13 @@ export default class Game {
                     this.quests.updateQuest(2);
                     alert('Anda mendapatkan Kunci Berkarat!');
                 } 
+                // Ambil Kunci Perak (Tile 7)
+                else if (type === 7) {
+                    this.inventory.addItem({ id: 'key_silver', name: 'Kunci Perak', icon: '🔑', desc: 'Membuka pintu area terlarang.' });
+                    this.map.data[tileY][tileX] = 0;
+                    audioManager.playItemPick();
+                    alert('Anda mendapatkan Kunci Perak!');
+                }
                 // Ambil P3K (Tile 5)
                 else if (type === 5) {
                     this.player.health = Math.min(100, this.player.health + 30);
@@ -236,16 +243,26 @@ export default class Game {
                     this.map.data[tileY][tileX] = 0;
                     audioManager.playItemPick();
                 }
-                // Buka Pintu Terkunci (Tile 2)
+                // Buka Pintu 1 / Kunci Berkarat (Tile 2)
                 else if (type === 2) {
                     if (this.inventory.hasItem('key_rusty')) {
-                        this.map.data[tileY][tileX] = 0; // Ubah ke lantai/jalan terbuka
+                        this.map.data[tileY][tileX] = 0; 
                         audioManager.playDoorOpen();
-                        alert('Pintu berhasil dibuka dengan Kunci Berkarat!');
+                        alert('Pintu 1 berhasil dibuka dengan Kunci Berkarat!');
                     } else {
                         alert('Pintu terkunci! Anda membutuhkan Kunci Berkarat.');
                     }
                 } 
+                // Buka Pintu 2 / Kunci Perak (Tile 8)
+                else if (type === 8) {
+                    if (this.inventory.hasItem('key_silver')) {
+                        this.map.data[tileY][tileX] = 0;
+                        audioManager.playDoorOpen();
+                        alert('Pintu Area Terlarang berhasil dibuka dengan Kunci Perak!');
+                    } else {
+                        alert('Pintu terkunci rapat! Anda membutuhkan Kunci Perak.');
+                    }
+                }
                 // Pintu Keluar Utama / Puzzle (Tile 3)
                 else if (type === 3) {
                     if (this.puzzles.puzzlesSolved.mainDoor) {
@@ -291,9 +308,11 @@ export default class Game {
         const nearby = this.getNearbyTile();
         if (nearby) {
             let promptText = '';
-            if (nearby.type === 2) promptText = '[ Tekan E untuk Buka Pintu ]';
+            if (nearby.type === 2) promptText = '[ Tekan E untuk Buka Pintu 1 ]';
+            else if (nearby.type === 8) promptText = '[ Tekan E untuk Buka Pintu 2 ]';
             else if (nearby.type === 3) promptText = '[ Tekan E untuk Pintu Utama ]';
-            else if (nearby.type === 4) promptText = '[ Tekan E untuk Ambil Kunci ]';
+            else if (nearby.type === 4) promptText = '[ Tekan E untuk Ambil Kunci Berkarat ]';
+            else if (nearby.type === 7) promptText = '[ Tekan E untuk Ambil Kunci Perak ]';
             else if (nearby.type === 5) promptText = '[ Tekan E untuk Ambil P3K ]';
             else if (nearby.type === 6) promptText = '[ Tekan E untuk Baca Catatan ]';
 
