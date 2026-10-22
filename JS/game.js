@@ -37,7 +37,8 @@ export default class Game {
 
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
-        // Toggle inventori yang aman dan mulus (hanya 1x trigger per tekan tombol)
+
+        // Toggle inventori yang aman dan mulus
         window.addEventListener('keydown', (e) => {
             if ((e.code === 'KeyI' || e.key.toLowerCase() === 'i') && this.isRunning && !this.isPaused) {
                 const invModal = document.getElementById('inventory-modal');
@@ -62,21 +63,21 @@ export default class Game {
     startNewGame() {
         audioManager.init();
 
-        // 1. Sembunyikan semua layar & modal
+        // Sembunyikan semua layar & modal
         document.querySelectorAll('.screen').forEach(s => {
             s.classList.remove('active');
             s.style.display = 'none';
         });
         document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
 
-        // 2. Tampilkan Layar Game Utama
+        // Tampilkan Layar Game Utama
         const gameScreen = document.getElementById('game-screen');
         if (gameScreen) {
             gameScreen.classList.add('active');
             gameScreen.style.display = 'block';
         }
 
-        // 3. Reset Posisi Pemain & Musuh
+        // Reset Posisi Pemain & Musuh
         this.player = new Player(64, 40);
         this.enemies = [
             new Enemy(250, 150),
@@ -162,8 +163,10 @@ export default class Game {
     }
 
     update(dt) {
+        // 1. Update Pemain
         this.player.update(this.input, this.collision, dt);
 
+        // 2. Update Musuh & Deteksi Tabrakan
         for (let enemy of this.enemies) {
             enemy.update(this.player, this.collision, dt);
 
@@ -177,41 +180,78 @@ export default class Game {
             }
         }
 
-
+        // 3. Interaksi Tombol E (Ambil Item / Buka Pintu / Catatan / Puzzle)
         if (this.input.isPressed('KeyE') || this.input.mobile.interact) {
-            const tileX = Math.floor((this.player.x + this.player.width / 2) / CONFIG.TILE_SIZE);
-            const tileY = Math.floor((this.player.y + this.player.height / 2) / CONFIG.TILE_SIZE);
-            
-            if (this.map.data[tileY] && this.map.data[tileY][tileX] !== undefined) {
-                const currentTile = this.map.data[tileY][tileX];
+            const playerCenterX = this.player.x + this.player.width / 2;
+            const playerCenterY = this.player.y + this.player.height / 2;
 
-                if (currentTile === 4) {
-                    this.inventory.addItem({ id: 'key_rusty', name: 'Kunci Berkarat', icon: '🗝️', desc: 'Membuka pintu bangsal utama.' });
-                    this.map.data[tileY][tileX] = 0;
-                    audioManager.playItemPick();
-                    this.quests.updateQuest(2);
-                    alert('Anda mendapatkan Kunci Berkarat!');
-                } else if (currentTile === 5) {
-                    this.player.health = Math.min(100, this.player.health + 30);
-                    this.map.data[tileY][tileX] = 0;
-                    audioManager.playItemPick();
-                    alert('Kesehatan dipulihkan!');
-                } else if (currentTile === 2) {
-                    if (this.inventory.hasItem('key_rusty')) {
+            // Cek tile tempat pemain berdiri DAN tile di sekitar (radius 1 tile)
+            const checkTiles = [
+                { x: Math.floor(playerCenterX / CONFIG.TILE_SIZE), y: Math.floor(playerCenterY / CONFIG.TILE_SIZE) },
+                { x: Math.floor((playerCenterX + 20) / CONFIG.TILE_SIZE), y: Math.floor(playerCenterY / CONFIG.TILE_SIZE) },
+                { x: Math.floor((playerCenterX - 20) / CONFIG.TILE_SIZE), y: Math.floor(playerCenterY / CONFIG.TILE_SIZE) },
+                { x: Math.floor(playerCenterX / CONFIG.TILE_SIZE), y: Math.floor((playerCenterY + 20) / CONFIG.TILE_SIZE) },
+                { x: Math.floor(playerCenterX / CONFIG.TILE_SIZE), y: Math.floor((playerCenterY - 20) / CONFIG.TILE_SIZE) }
+            ];
+
+            let interacted = false;
+
+            for (let pos of checkTiles) {
+                if (interacted) break;
+                
+                const tileY = pos.y;
+                const tileX = pos.x;
+
+                if (this.map.data[tileY] && this.map.data[tileY][tileX] !== undefined) {
+                    const currentTile = this.map.data[tileY][tileX];
+
+                    // Ambil Kunci Berkarat (Tile 4)
+                    if (currentTile === 4) {
+                        this.inventory.addItem({ id: 'key_rusty', name: 'Kunci Berkarat', icon: '🗝️', desc: 'Membuka pintu bangsal utama.' });
                         this.map.data[tileY][tileX] = 0;
-                        audioManager.playDoorOpen();
-                        alert('Pintu berhasil dibuka!');
-                    } else {
-                        alert('Pintu terkunci! Butuh Kunci Berkarat.');
+                        audioManager.playItemPick();
+                        this.quests.updateQuest(2);
+                        alert('Anda mendapatkan Kunci Berkarat!');
+                        interacted = true;
+                    } 
+                    // Ambil P3K (Tile 5)
+                    else if (currentTile === 5) {
+                        this.player.health = Math.min(100, this.player.health + 30);
+                        this.map.data[tileY][tileX] = 0;
+                        audioManager.playItemPick();
+                        alert('Kesehatan dipulihkan!');
+                        interacted = true;
+                    } 
+                    // Ambil Catatan Kode Gembok (Tile 6)
+                    else if (currentTile === 6) {
+                        alert('Kamu menemukan catatan berdarah di lantai: "Kode pintu utama adalah 7492"');
+                        this.inventory.addItem({ id: 'note_code', name: 'Catatan Misterius', icon: '📜', desc: 'Kode gembok pintu utama: 7492' });
+                        this.map.data[tileY][tileX] = 0;
+                        audioManager.playItemPick();
+                        interacted = true;
                     }
-                } else if (currentTile === 3) {
-                    if (this.puzzles.puzzlesSolved.mainDoor) {
-                        this.isRunning = false;
-                        EndingSystem.triggerEnding('escape');
-                    } else {
-                        this.puzzles.openPuzzle('mainDoor', () => {
-                            this.quests.updateQuest(3);
-                        });
+                    // Buka Pintu Terkunci (Tile 2)
+                    else if (currentTile === 2) {
+                        if (this.inventory.hasItem('key_rusty')) {
+                            this.map.data[tileY][tileX] = 0; // Pintu terbuka & berubah jadi jalan
+                            audioManager.playDoorOpen();
+                            alert('Pintu berhasil dibuka dengan Kunci Berkarat!');
+                        } else {
+                            alert('Pintu terkunci! Anda membutuhkan Kunci Berkarat.');
+                        }
+                        interacted = true;
+                    } 
+                    // Pintu Keluar Utama / Puzzle (Tile 3)
+                    else if (currentTile === 3) {
+                        if (this.puzzles.puzzlesSolved.mainDoor) {
+                            this.isRunning = false;
+                            EndingSystem.triggerEnding('escape');
+                        } else {
+                            this.puzzles.openPuzzle('mainDoor', () => {
+                                this.quests.updateQuest(3);
+                            });
+                        }
+                        interacted = true;
                     }
                 }
             }
@@ -229,7 +269,6 @@ export default class Game {
     render() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Kamera dioptimalkan dengan Math.floor agar pergerakan halus tanpa stutter/jitter
         const camera = {
             x: Math.floor(this.player.x - this.canvas.width / 2 + this.player.width / 2),
             y: Math.floor(this.player.y - this.canvas.height / 2 + this.player.height / 2)
