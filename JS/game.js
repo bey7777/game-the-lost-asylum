@@ -63,21 +63,21 @@ export default class Game {
     startNewGame() {
         audioManager.init();
 
-        // Sembunyikan semua layar & modal
+        // 1. Sembunyikan semua layar & modal
         document.querySelectorAll('.screen').forEach(s => {
             s.classList.remove('active');
             s.style.display = 'none';
         });
         document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
 
-        // Tampilkan Layar Game Utama
+        // 2. Tampilkan Layar Game Utama
         const gameScreen = document.getElementById('game-screen');
         if (gameScreen) {
             gameScreen.classList.add('active');
             gameScreen.style.display = 'block';
         }
 
-        // Reset Posisi Pemain & Musuh
+        // 3. Reset Posisi Pemain & Musuh
         this.player = new Player(64, 40);
         this.enemies = [
             new Enemy(250, 150),
@@ -162,11 +162,38 @@ export default class Game {
         requestAnimationFrame((t) => this.loop(t));
     }
 
+    // Menghitung tile yang sedang didekati pemain
+    getNearbyTile() {
+        const playerCenterX = this.player.x + this.player.width / 2;
+        const playerCenterY = this.player.y + this.player.height / 2;
+
+        const checkPositions = [
+            { x: Math.floor(playerCenterX / CONFIG.TILE_SIZE), y: Math.floor(playerCenterY / CONFIG.TILE_SIZE) },
+            { x: Math.floor((playerCenterX + 24) / CONFIG.TILE_SIZE), y: Math.floor(playerCenterY / CONFIG.TILE_SIZE) },
+            { x: Math.floor((playerCenterX - 24) / CONFIG.TILE_SIZE), y: Math.floor(playerCenterY / CONFIG.TILE_SIZE) },
+            { x: Math.floor(playerCenterX / CONFIG.TILE_SIZE), y: Math.floor((playerCenterY + 24) / CONFIG.TILE_SIZE) },
+            { x: Math.floor(playerCenterX / CONFIG.TILE_SIZE), y: Math.floor((playerCenterY - 24) / CONFIG.TILE_SIZE) }
+        ];
+
+        for (let pos of checkPositions) {
+            const tileY = pos.y;
+            const tileX = pos.x;
+
+            if (this.map.data[tileY] && this.map.data[tileY][tileX] !== undefined) {
+                const type = this.map.data[tileY][tileX];
+                if (type !== 0 && type !== 1) { // 0: lantai, 1: dinding biasa
+                    return { type, tileX, tileY };
+                }
+            }
+        }
+        return null;
+    }
+
     update(dt) {
-        // 1. Update Pemain
+        // 1. Update Pergerakan Pemain
         this.player.update(this.input, this.collision, dt);
 
-        // 2. Update Musuh & Deteksi Tabrakan
+        // 2. Update Musuh & Deteksi Kematian
         for (let enemy of this.enemies) {
             enemy.update(this.player, this.collision, dt);
 
@@ -180,81 +207,60 @@ export default class Game {
             }
         }
 
-        // 3. Interaksi Tombol E (Ambil Item / Buka Pintu / Catatan / Puzzle)
+        // 3. Interaksi Tombol E
         if (this.input.isPressed('KeyE') || this.input.mobile.interact) {
-            const playerCenterX = this.player.x + this.player.width / 2;
-            const playerCenterY = this.player.y + this.player.height / 2;
+            const tileData = this.getNearbyTile();
 
-            // Cek tile tempat pemain berdiri DAN tile di sekitar (radius 1 tile)
-            const checkTiles = [
-                { x: Math.floor(playerCenterX / CONFIG.TILE_SIZE), y: Math.floor(playerCenterY / CONFIG.TILE_SIZE) },
-                { x: Math.floor((playerCenterX + 20) / CONFIG.TILE_SIZE), y: Math.floor(playerCenterY / CONFIG.TILE_SIZE) },
-                { x: Math.floor((playerCenterX - 20) / CONFIG.TILE_SIZE), y: Math.floor(playerCenterY / CONFIG.TILE_SIZE) },
-                { x: Math.floor(playerCenterX / CONFIG.TILE_SIZE), y: Math.floor((playerCenterY + 20) / CONFIG.TILE_SIZE) },
-                { x: Math.floor(playerCenterX / CONFIG.TILE_SIZE), y: Math.floor((playerCenterY - 20) / CONFIG.TILE_SIZE) }
-            ];
+            if (tileData) {
+                const { type, tileX, tileY } = tileData;
 
-            let interacted = false;
-
-            for (let pos of checkTiles) {
-                if (interacted) break;
-                
-                const tileY = pos.y;
-                const tileX = pos.x;
-
-                if (this.map.data[tileY] && this.map.data[tileY][tileX] !== undefined) {
-                    const currentTile = this.map.data[tileY][tileX];
-
-                    // Ambil Kunci Berkarat (Tile 4)
-                    if (currentTile === 4) {
-                        this.inventory.addItem({ id: 'key_rusty', name: 'Kunci Berkarat', icon: '🗝️', desc: 'Membuka pintu bangsal utama.' });
-                        this.map.data[tileY][tileX] = 0;
-                        audioManager.playItemPick();
-                        this.quests.updateQuest(2);
-                        alert('Anda mendapatkan Kunci Berkarat!');
-                        interacted = true;
-                    } 
-                    // Ambil P3K (Tile 5)
-                    else if (currentTile === 5) {
-                        this.player.health = Math.min(100, this.player.health + 30);
-                        this.map.data[tileY][tileX] = 0;
-                        audioManager.playItemPick();
-                        alert('Kesehatan dipulihkan!');
-                        interacted = true;
-                    } 
-                    // Ambil Catatan Kode Gembok (Tile 6)
-                    else if (currentTile === 6) {
-                        alert('Kamu menemukan catatan berdarah di lantai: "Kode pintu utama adalah 7492"');
-                        this.inventory.addItem({ id: 'note_code', name: 'Catatan Misterius', icon: '📜', desc: 'Kode gembok pintu utama: 7492' });
-                        this.map.data[tileY][tileX] = 0;
-                        audioManager.playItemPick();
-                        interacted = true;
+                // Ambil Kunci Berkarat (Tile 4)
+                if (type === 4) {
+                    this.inventory.addItem({ id: 'key_rusty', name: 'Kunci Berkarat', icon: '🗝️', desc: 'Membuka pintu bangsal utama.' });
+                    this.map.data[tileY][tileX] = 0;
+                    audioManager.playItemPick();
+                    this.quests.updateQuest(2);
+                    alert('Anda mendapatkan Kunci Berkarat!');
+                } 
+                // Ambil P3K (Tile 5)
+                else if (type === 5) {
+                    this.player.health = Math.min(100, this.player.health + 30);
+                    this.map.data[tileY][tileX] = 0;
+                    audioManager.playItemPick();
+                    alert('Kesehatan dipulihkan!');
+                } 
+                // Ambil Catatan Kode Gembok (Tile 6)
+                else if (type === 6) {
+                    alert('Kamu menemukan catatan berdarah di lantai: "Kode pintu utama adalah 7492"');
+                    this.inventory.addItem({ id: 'note_code', name: 'Catatan Misterius', icon: '📜', desc: 'Kode gembok pintu utama: 7492' });
+                    this.map.data[tileY][tileX] = 0;
+                    audioManager.playItemPick();
+                }
+                // Buka Pintu Terkunci (Tile 2)
+                else if (type === 2) {
+                    if (this.inventory.hasItem('key_rusty')) {
+                        this.map.data[tileY][tileX] = 0; // Ubah ke lantai/jalan terbuka
+                        audioManager.playDoorOpen();
+                        alert('Pintu berhasil dibuka dengan Kunci Berkarat!');
+                    } else {
+                        alert('Pintu terkunci! Anda membutuhkan Kunci Berkarat.');
                     }
-                    // Buka Pintu Terkunci (Tile 2)
-                    else if (currentTile === 2) {
-                        if (this.inventory.hasItem('key_rusty')) {
-                            this.map.data[tileY][tileX] = 0; // Pintu terbuka & berubah jadi jalan
-                            audioManager.playDoorOpen();
-                            alert('Pintu berhasil dibuka dengan Kunci Berkarat!');
-                        } else {
-                            alert('Pintu terkunci! Anda membutuhkan Kunci Berkarat.');
-                        }
-                        interacted = true;
-                    } 
-                    // Pintu Keluar Utama / Puzzle (Tile 3)
-                    else if (currentTile === 3) {
-                        if (this.puzzles.puzzlesSolved.mainDoor) {
-                            this.isRunning = false;
-                            EndingSystem.triggerEnding('escape');
-                        } else {
-                            this.puzzles.openPuzzle('mainDoor', () => {
-                                this.quests.updateQuest(3);
-                            });
-                        }
-                        interacted = true;
+                } 
+                // Pintu Keluar Utama / Puzzle (Tile 3)
+                else if (type === 3) {
+                    if (this.puzzles.puzzlesSolved.mainDoor) {
+                        this.isRunning = false;
+                        EndingSystem.triggerEnding('escape');
+                    } else {
+                        this.puzzles.openPuzzle('mainDoor', () => {
+                            this.quests.updateQuest(3);
+                        });
                     }
                 }
             }
+
+            // Reset status input interaksi agar tidak ke-trigger berkali-kali
+            if (this.input.mobile) this.input.mobile.interact = false;
         }
 
         this.ui.updateHUD(this.player);
@@ -281,6 +287,33 @@ export default class Game {
             enemy.draw(this.ctx, camera);
         }
 
+        // Tampilkan Teks Petunjuk "Tekan E" di atas kepala pemain
+        const nearby = this.getNearbyTile();
+        if (nearby) {
+            let promptText = '';
+            if (nearby.type === 2) promptText = '[ Tekan E untuk Buka Pintu ]';
+            else if (nearby.type === 3) promptText = '[ Tekan E untuk Pintu Utama ]';
+            else if (nearby.type === 4) promptText = '[ Tekan E untuk Ambil Kunci ]';
+            else if (nearby.type === 5) promptText = '[ Tekan E untuk Ambil P3K ]';
+            else if (nearby.type === 6) promptText = '[ Tekan E untuk Baca Catatan ]';
+
+            if (promptText) {
+                this.ctx.save();
+                this.ctx.font = 'bold 14px monospace';
+                this.ctx.fillStyle = '#ff3333';
+                this.ctx.textAlign = 'center';
+                this.ctx.shadowColor = '#000000';
+                this.ctx.shadowBlur = 5;
+
+                const screenX = this.player.x - camera.x + this.player.width / 2;
+                const screenY = this.player.y - camera.y - 12;
+
+                this.ctx.fillText(promptText, screenX, screenY);
+                this.ctx.restore();
+            }
+        }
+
+        // Senter & Pencahayaan
         if (this.player.flashlightOn) {
             const screenX = this.player.x - camera.x + this.player.width / 2;
             const screenY = this.player.y - camera.y + this.player.height / 2;
